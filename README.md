@@ -42,7 +42,3 @@ The best model achieved:
 
 - 0.778 macro-F1 for 5 s early warning
 - 0.754 macro-F1 for 10 s early warning
-
-## Status
-
-This repository is under preparation for research reproducibility.
