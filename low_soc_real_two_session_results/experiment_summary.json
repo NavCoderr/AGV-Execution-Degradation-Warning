@@ -1,0 +1,85 @@
+{
+  "experiment_type": "real_agv_low_soc_execution_degradation_with_high_soc_control",
+  "real_files": [
+    "01_real_agv_live_LOW_SOC_STRESS.csv",
+    "02_real_agv_live_HIGH_SOC_CONTROL.csv"
+  ],
+  "node_file": "Node_F3.csv",
+  "edge_file": "Edge_Distances3_.csv",
+  "sessions": [
+    {
+      "session_id": "S1_LOW_SOC_STRESS",
+      "session_role": "LOW_SOC_STRESS",
+      "source_file": "01_real_agv_live_LOW_SOC_STRESS.csv",
+      "raw_rows": 4240,
+      "raw_battery_min_percent": 2.0,
+      "raw_battery_max_percent": 59.0
+    },
+    {
+      "session_id": "S2_HIGH_SOC_CONTROL",
+      "session_role": "HIGH_SOC_CONTROL",
+      "source_file": "02_real_agv_live_HIGH_SOC_CONTROL.csv",
+      "raw_rows": 790,
+      "raw_battery_min_percent": 79.0,
+      "raw_battery_max_percent": 83.0
+    }
+  ],
+  "total_processed_1hz_rows": 9706,
+  "graph_nodes": 35,
+  "graph_edges": 102,
+  "battery_min_percent": 2.0,
+  "battery_max_percent": 83.0,
+  "history_window_s": 30,
+  "future_window_s": 10,
+  "horizons_s": [
+    0,
+    5,
+    10,
+    20
+  ],
+  "models": [
+    "LogisticRegression",
+    "ExtraTrees",
+    "RandomForest",
+    "GradientBoosting"
+  ],
+  "feature_ablation_groups": [
+    "FULL",
+    "NO_SOC",
+    "NO_GRAPH",
+    "NO_TARGET_PROGRESS",
+    "ONLY_SOC",
+    "ONLY_MOTION",
+    "SOC_MOTION",
+    "MOTION_GRAPH",
+    "SOC_MOTION_GRAPH"
+  ],
+  "label_sensitivity_configs": {
+    "loose": {
+      "speed_thr": 0.08,
+      "stop_thr": 0.5,
+      "progress_thr": 0.05,
+      "brake_thr": 0.2
+    },
+    "default": {
+      "speed_thr": 0.055,
+      "stop_thr": 0.6,
+      "progress_thr": 0.03,
+      "brake_thr": 0.3
+    },
+    "strict": {
+      "speed_thr": 0.04,
+      "stop_thr": 0.7,
+      "progress_thr": 0.01,
+      "brake_thr": 0.4
+    }
+  },
+  "main_claim": "Learned early warning of degraded AGV execution from real physical telemetry, SOC dynamics, motion stability, target progress, graph context, and a high-SOC control session.",
+  "not_claimed": [
+    "no SIM data",
+    "no edge-cost correction",
+    "no dynamic replanning",
+    "no calibrated battery-health model",
+    "no certified safety controller"
+  ]
+}
