@@ -118,3 +118,17 @@ Install dependencies:
 
 ```bash
 pip install -r requirements.txt
+
+```
+
+Run the main experiment:
+
+```bash
+python low_soc_experiment.py
+```
+
+Generate case-study plots:
+
+```bash
+python case_plots.py
+```
