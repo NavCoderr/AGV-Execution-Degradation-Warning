@@ -1,0 +1,32 @@
+{
+  "raw_input_rows": 5030,
+  "graph_nodes": 35,
+  "directed_edges": 102,
+  "best_by_horizon": [
+    {
+      "horizon_s": 0,
+      "model": "extra_trees",
+      "mean": 0.9099635865661574,
+      "std": 0.0573250228266293
+    },
+    {
+      "horizon_s": 5,
+      "model": "extra_trees",
+      "mean": 0.8779832488691828,
+      "std": 0.0350626174241116
+    },
+    {
+      "horizon_s": 10,
+      "model": "extra_trees",
+      "mean": 0.8123411157101819,
+      "std": 0.03575597954201589
+    },
+    {
+      "horizon_s": 20,
+      "model": "extra_trees",
+      "mean": 0.7189708594031894,
+      "std": 0.0311664407390236
+    }
+  ],
+  "interpretation": "Single-platform, two-session feasibility study. Do not claim battery-failure causality, fleet generalization, or certified safety performance."
+}

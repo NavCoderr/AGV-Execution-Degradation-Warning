@@ -1,0 +1,7 @@
+protocol,model,threshold,missions,degraded_missions,warned_degraded_missions,mission_warning_recall,false_warning_missions,false_warnings_per_mission,row_level_false_warnings,false_warning_rows_per_hour,median_first_warning_lead_s
+grouped_low_soc_cv,extra_trees,0.5,29,18,16,0.8888888888888888,3,0.10344827586206896,193,89.4669070306464,0.5
+grouped_low_soc_cv,logistic,0.5,29,18,14,0.7777777777777778,2,0.06896551724137931,103,47.746587689930465,18.0
+grouped_low_soc_cv,random_forest,0.5,29,18,14,0.7777777777777778,3,0.10344827586206896,163,75.56013391707442,20.0
+untouched_high_soc_control,extra_trees,0.5,6,3,0,0.0,0,0.0,0,0.0,
+untouched_high_soc_control,logistic,0.5,6,3,0,0.0,0,0.0,0,0.0,
+untouched_high_soc_control,random_forest,0.5,6,3,0,0.0,0,0.0,0,0.0,
