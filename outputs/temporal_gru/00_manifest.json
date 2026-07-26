@@ -1,0 +1,16 @@
+{
+  "model": "single-layer GRU with fixed 10-second sequence",
+  "purpose": "temporal baseline; no novel architecture claim",
+  "primary_protocol": "complete-session leave-one-session-out",
+  "sequence_boundary_rule": "no crossing of session, telemetry segment, mission leg, or non-1-second timestamp interval",
+  "preprocessing": "channel removal, median imputation, and standardization fitted on the fitting partition only",
+  "calibration": "development-only Platt calibration",
+  "threshold_selection": "development-only macro-F1",
+  "feature_set": "full graph without SOC plus fixed provenance channels",
+  "sequence_length_s": 10,
+  "epochs": 40,
+  "hidden_size": 32,
+  "random_state": 42,
+  "device": "cpu",
+  "caution": "This baseline addresses temporal-model completeness but does not solve limited external validity or automatic-label validity."
+}
