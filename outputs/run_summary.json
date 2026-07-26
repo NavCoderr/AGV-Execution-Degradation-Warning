@@ -1,0 +1,12 @@
+{
+  "sessions": 5,
+  "aligned_rows": 18534,
+  "eligible_h5": 7204,
+  "event_onsets": 67,
+  "mission_legs_with_onsets": 60,
+  "recorded_route_fraction": 0.5704650911837704,
+  "reconstructed_route_fraction": 0.3953814610985216,
+  "graph_ge_euclidean_fraction": 1.0,
+  "all_sessions_exact_1hz": true,
+  "status": "dataset_completed"
+}

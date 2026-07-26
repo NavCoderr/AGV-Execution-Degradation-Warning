@@ -1,0 +1,29 @@
+{
+  "causal_history_window_s": 10,
+  "future_onset_horizons_s": [
+    5,
+    10,
+    20
+  ],
+  "speed_stop_threshold_mps": 0.03,
+  "past_stop_share_threshold": 0.6,
+  "past_mean_speed_threshold_mps": 0.055,
+  "past_cartesian_displacement_threshold_m": 0.03,
+  "minimum_active_mission_share": 0.6,
+  "maximum_external_hold_share": 0.2,
+  "minimum_genuine_observations": 4,
+  "minimum_observed_span_s": 6,
+  "degradation_confirmation_s": 3,
+  "degradation_recovery_rearm_s": 10,
+  "current_state_rule": "active AND not externally explained AND ((past stop_share>=0.60 OR past mean_speed<0.055) AND past displacement<0.03)",
+  "future_label_rule": "first causally confirmed degradation-episode onset occurs within h seconds while the mission remains at risk",
+  "censoring_events": [
+    "mission completion",
+    "external hold",
+    "telemetry unavailable",
+    "mission-leg end"
+  ],
+  "short_causal_holds_count_as_physical_observations": false,
+  "graph_progress_used_in_target": false,
+  "interpretation": "causal operational proxy for onset of ineffective mission execution; not a mechanical-fault label"
+}
