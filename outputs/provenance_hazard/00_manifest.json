@@ -1,0 +1,76 @@
+{
+  "tested_hypothesis": "provenance-conditioned discrete-time degradation-onset hazard",
+  "outer_protocol": "leave-one-session-out",
+  "hazard_bins_s": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "reported_horizons_s": [
+    5,
+    10,
+    20
+  ],
+  "primary_comparison": [
+    "TelemetryHazard",
+    "UngatedGraphHazard",
+    "ProvenanceConditionedHazard"
+  ],
+  "interpretation": "The proposed model is supported only if provenance conditioning improves session-level onset metrics over both hazard ablations.",
+  "support_by_horizon": {
+    "5": {
+      "provenance_pr_auc_mean": 0.19128764629179137,
+      "supported_over_both_ablations": false,
+      "paired_positive_folds": {
+        "TelemetryHazard": 3,
+        "UngatedGraphHazard": 3
+      },
+      "paired_pr_auc_wins": {
+        "TelemetryHazard": 2,
+        "UngatedGraphHazard": 2
+      }
+    },
+    "10": {
+      "provenance_pr_auc_mean": 0.31414751852015455,
+      "supported_over_both_ablations": false,
+      "paired_positive_folds": {
+        "TelemetryHazard": 3,
+        "UngatedGraphHazard": 3
+      },
+      "paired_pr_auc_wins": {
+        "TelemetryHazard": 2,
+        "UngatedGraphHazard": 1
+      }
+    },
+    "20": {
+      "provenance_pr_auc_mean": 0.38454885886164153,
+      "supported_over_both_ablations": false,
+      "paired_positive_folds": {
+        "TelemetryHazard": 3,
+        "UngatedGraphHazard": 3
+      },
+      "paired_pr_auc_wins": {
+        "TelemetryHazard": 2,
+        "UngatedGraphHazard": 1
+      }
+    }
+  },
+  "overall_claim_supported": false
+}
