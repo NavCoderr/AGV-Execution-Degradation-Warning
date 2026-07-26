@@ -1,0 +1,28 @@
+{
+  "best_h5_model": "RandomForest",
+  "best_h5_feature_set": "full_graph_no_soc",
+  "alert_operating_points": [
+    "0.8 x learned threshold",
+    "1.0 x learned threshold",
+    "1.2 x learned threshold"
+  ],
+  "detected_onset_cases": 67,
+  "negative_control_cases": 30,
+  "expert_form_is_blinded_to_automatic_case_type": true,
+  "window_before_s": 15,
+  "window_after_s": 5,
+  "allowed_expert_labels": {
+    "detected onset interpretation": [
+      "confirmed_degradation",
+      "explained_stop",
+      "not_degradation",
+      "uncertain"
+    ],
+    "negative control interpretation": [
+      "valid_negative",
+      "missed_degradation",
+      "uncertain"
+    ]
+  },
+  "paper_claim_rule": "Do not claim expert validation until the form is independently completed and the completed audit summary is generated."
+}

@@ -1,0 +1,16 @@
+alert_episodes,false_alert_episodes,false_alerts_per_hour,events,warned_events,event_recall,median_lead_s,pct_events_lead_ge_2s,pct_events_lead_ge_5s,test_session,model,feature_set,operating_point,learned_threshold,applied_threshold,evaluated_hours
+32,10,16.75977653631285,25,21,0.84,2.0,0.5714285714285714,0.09523809523809523,S1_LOW_SOC_STRESS,RandomForest,full_graph_no_soc,sensitive_0.8x,0.24,0.192,0.5966666666666667
+29,8,13.40782122905028,25,20,0.8,2.0,0.6,0.1,S1_LOW_SOC_STRESS,RandomForest,full_graph_no_soc,learned_1.0x,0.24,0.24,0.5966666666666667
+21,2,3.35195530726257,25,17,0.68,2.0,0.5294117647058824,0.058823529411764705,S1_LOW_SOC_STRESS,RandomForest,full_graph_no_soc,conservative_1.2x,0.24,0.288,0.5966666666666667
+0,0,0.0,0,0,,,,,S2_HIGH_SOC_CONTROL,RandomForest,full_graph_no_soc,sensitive_0.8x,0.22,0.17600000000000002,0.1075
+0,0,0.0,0,0,,,,,S2_HIGH_SOC_CONTROL,RandomForest,full_graph_no_soc,learned_1.0x,0.22,0.22,0.1075
+0,0,0.0,0,0,,,,,S2_HIGH_SOC_CONTROL,RandomForest,full_graph_no_soc,conservative_1.2x,0.22,0.264,0.1075
+4,3,9.318377911993098,10,2,0.2,4.5,1.0,0.5,S3_MEDIUM_SOC_WHOLETESTING,RandomForest,full_graph_no_soc,sensitive_0.8x,0.54,0.43200000000000005,0.3219444444444444
+3,2,6.2122519413287325,10,2,0.2,4.0,1.0,0.5,S3_MEDIUM_SOC_WHOLETESTING,RandomForest,full_graph_no_soc,learned_1.0x,0.54,0.54,0.3219444444444444
+3,2,6.2122519413287325,10,2,0.2,4.0,1.0,0.5,S3_MEDIUM_SOC_WHOLETESTING,RandomForest,full_graph_no_soc,conservative_1.2x,0.54,0.648,0.3219444444444444
+26,6,7.753050969131372,32,23,0.71875,5.0,0.8695652173913043,0.5652173913043478,S4_SAFETY_RICH_NAVEEN12,RandomForest,full_graph_no_soc,sensitive_0.8x,0.26,0.20800000000000002,0.7738888888888888
+27,5,6.460875807609476,32,23,0.71875,3.0,0.8695652173913043,0.30434782608695654,S4_SAFETY_RICH_NAVEEN12,RandomForest,full_graph_no_soc,learned_1.0x,0.26,0.26,0.7738888888888888
+23,3,3.876525484565686,32,20,0.625,3.0,0.9,0.15,S4_SAFETY_RICH_NAVEEN12,RandomForest,full_graph_no_soc,conservative_1.2x,0.26,0.312,0.7738888888888888
+0,0,0.0,0,0,,,,,S5_REAL_TMS_JULY10,RandomForest,full_graph_no_soc,sensitive_0.8x,0.22,0.17600000000000002,0.2011111111111111
+0,0,0.0,0,0,,,,,S5_REAL_TMS_JULY10,RandomForest,full_graph_no_soc,learned_1.0x,0.22,0.22,0.2011111111111111
+0,0,0.0,0,0,,,,,S5_REAL_TMS_JULY10,RandomForest,full_graph_no_soc,conservative_1.2x,0.22,0.264,0.2011111111111111

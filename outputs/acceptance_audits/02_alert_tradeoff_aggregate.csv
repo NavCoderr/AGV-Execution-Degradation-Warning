@@ -1,0 +1,4 @@
+horizon_s,model,feature_set,operating_point,folds,events,warned_events,event_recall,alert_episodes,false_alert_episodes,false_alerts_per_hour,median_fold_lead_s
+5,RandomForest,full_graph_no_soc,conservative_1.2x,5,67,39,0.582089552238806,47,7,3.4980566352026647,3.0
+5,RandomForest,full_graph_no_soc,learned_1.0x,5,67,45,0.6716417910447762,59,15,7.4958356468628535,3.0
+5,RandomForest,full_graph_no_soc,sensitive_0.8x,5,67,46,0.6865671641791045,62,19,9.494725152692947,4.5
