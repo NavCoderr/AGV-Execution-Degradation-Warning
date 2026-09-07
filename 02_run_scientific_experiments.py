@@ -464,7 +464,7 @@ def make_final_figures(results: pd.DataFrame, predictions: pd.DataFrame, out_dir
         (results["variant"] == "all_sessions")
         & (results["horizon_s"] == 5)
         & results["feature_set"].isin(
-            ["full_graph", "full_graph_no_soc", "euclidean_only", "no_graph"]
+            ["full_graph", "full_graph_no_soc", "euclidean_only", "euclidean_no_soc", "no_graph"]
         )
         & results["model"].isin(
             ["LogisticRegression", "ExtraTrees", "RandomForest", "HistGradientBoosting"]
@@ -476,12 +476,16 @@ def make_final_figures(results: pd.DataFrame, predictions: pd.DataFrame, out_dir
             "RandomForest", "HistGradientBoosting",
         ]
         feature_order = [
-            "no_graph", "euclidean_only",
-            "full_graph", "full_graph_no_soc",
+            "no_graph",
+            "euclidean_only",
+            "euclidean_no_soc",
+            "full_graph",
+            "full_graph_no_soc",
         ]
         feature_labels = {
             "no_graph": "Base context",
             "euclidean_only": "Base + Euclidean",
+            "euclidean_no_soc": "Base + Euclidean\n(no SOC)",
             "full_graph": "Base + Euc. + graph",
             "full_graph_no_soc": "Base + Euc. + graph\n(no SOC)",
         }
@@ -526,7 +530,7 @@ def make_final_figures(results: pd.DataFrame, predictions: pd.DataFrame, out_dir
 
         handles, labels = ax.get_legend_handles_labels()
 
-        legend_order = [0,1,2,3,4]
+        legend_order = [0, 1, 2, 3, 4]
 
         legend = ax.legend(
             [handles[index] for index in legend_order],
@@ -708,7 +712,7 @@ def write_scientific_summaries(results: pd.DataFrame, data: pd.DataFrame, out_di
     for model, g in h5.groupby("model"):
         base = g[g["feature_set"] == "no_graph"][["test_session", "macro_f1", "pr_auc"]].rename(
             columns={"macro_f1":"base_macro_f1", "pr_auc":"base_pr_auc"})
-        for feature_set in ["euclidean_only", "full_graph", "full_graph_no_soc"]:
+        for feature_set in ["euclidean_only", "euclidean_no_soc", "full_graph", "full_graph_no_soc"]:
             q = g[g["feature_set"] == feature_set][["test_session", "macro_f1", "pr_auc"]]
             merged = q.merge(base, on="test_session", how="inner")
             if merged.empty:
@@ -777,11 +781,17 @@ def main() -> None:
         "recorded_route_only": data["route_source"].eq("recorded"),
     }
     full_graph_features = BASE + GRAPH + EUCLID
+    euclidean_features = BASE + EUCLID
     feature_sets = {
         "full_graph": full_graph_features,
-        "full_graph_no_soc": [c for c in full_graph_features if c not in SOC_FEATURES],
+        "full_graph_no_soc": [
+            c for c in full_graph_features if c not in SOC_FEATURES
+        ],
         "no_graph": BASE,
-        "euclidean_only": BASE + EUCLID,
+        "euclidean_only": euclidean_features,
+        "euclidean_no_soc": [
+            c for c in euclidean_features if c not in SOC_FEATURES
+        ],
     }
 
     result_rows: list[dict] = []
