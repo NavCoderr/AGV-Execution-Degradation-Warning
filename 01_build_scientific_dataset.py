@@ -900,9 +900,102 @@ def main():
     data=rolling_features(data); data=construct_missions(data); data=add_future_labels(data)
     audit(raws,hs,data,out_dir)
     data.to_csv(out_dir/'harmonized_graph_mission_state.csv',index=False)
-    # event table
-    ev=data[data.event_onset==1][['session','timestamp','mission_leg_id','soc','graph_remaining_m','euclidean_remaining_m','mission_state','route_source']]
-    ev.to_csv(out_dir/'event_onsets.csv',index=False)
+    # event table with fields required for near-target/goal-arrival audit
+    event_columns = [
+        'session',
+        'timestamp',
+        'mission_leg_id',
+        'target_node',
+        'target_reached',
+        'active_mission',
+        'speed_mps',
+        'state_speed_mean_10s',
+        'state_stop_share_10s',
+        'state_cartesian_displacement_10s_m',
+        'soc',
+        'graph_remaining_m',
+        'euclidean_remaining_m',
+        'route_completion',
+        'degradation_candidate',
+        'current_degraded',
+        'mission_state',
+        'route_source',
+    ]
+    event_columns = [c for c in event_columns if c in data.columns]
+
+    ev = data.loc[data['event_onset'].eq(1), event_columns].copy()
+    if 'euclidean_remaining_m' in ev.columns:
+        ev['near_target_003m'] = (
+            ev['euclidean_remaining_m'].notna()
+            & ev['euclidean_remaining_m'].le(0.03)
+        ).astype('int8')
+    ev.to_csv(out_dir/'event_onsets.csv', index=False)
+
+    # S4 audit: retain a local window around every operational onset.
+    # This does NOT change labels; it only creates evidence for checking
+    # whether near-target stops are genuine degradation or normal arrivals.
+    s4_name = 'S4_SAFETY_RICH_NAVEEN12'
+    audit_rows = []
+    s4_onsets = data[
+        data['session'].eq(s4_name)
+        & data['event_onset'].eq(1)
+    ].copy()
+
+    for _, onset_row in s4_onsets.iterrows():
+        t0 = onset_row['timestamp']
+        same_session = data['session'].eq(s4_name)
+        in_window = data['timestamp'].between(
+            t0 - pd.Timedelta(seconds=15),
+            t0 + pd.Timedelta(seconds=10)
+        )
+        window = data.loc[same_session & in_window].copy()
+        if window.empty:
+            continue
+
+        window['onset_timestamp'] = t0
+        window['relative_time_s'] = (
+            window['timestamp'] - t0
+        ).dt.total_seconds()
+
+        audit_columns = [
+            'session',
+            'onset_timestamp',
+            'relative_time_s',
+            'timestamp',
+            'temporal_segment_id',
+            'mission_leg_id',
+            'target_node',
+            'target_reached',
+            'active_mission',
+            'external_hold',
+            'telemetry_available',
+            'telemetry_fresh',
+            'speed_mps',
+            'state_speed_mean_10s',
+            'state_stop_share_10s',
+            'state_cartesian_displacement_10s_m',
+            'euclidean_remaining_m',
+            'graph_remaining_m',
+            'route_completion',
+            'degradation_candidate',
+            'current_degraded',
+            'event_onset',
+            'mission_state',
+            'route_source',
+        ]
+        audit_columns = [c for c in audit_columns if c in window.columns]
+        audit_rows.append(window[audit_columns])
+
+    if audit_rows:
+        pd.concat(audit_rows, ignore_index=True).to_csv(
+            out_dir/'s4_onset_audit_windows.csv',
+            index=False
+        )
+    else:
+        pd.DataFrame().to_csv(
+            out_dir/'s4_onset_audit_windows.csv',
+            index=False
+        )
     # Scientific data-quality figures only. Model experiments are intentionally
     # separated into 02_run_scientific_experiments.py to avoid mixing old and
     # final evaluation protocols.
