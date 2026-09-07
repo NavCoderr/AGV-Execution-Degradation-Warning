@@ -526,7 +526,7 @@ def make_final_figures(results: pd.DataFrame, predictions: pd.DataFrame, out_dir
 
         handles, labels = ax.get_legend_handles_labels()
 
-        legend_order = [0, 2, 1, 3]
+        legend_order = [0,1,2,3,4]
 
         legend = ax.legend(
             [handles[index] for index in legend_order],
@@ -534,7 +534,7 @@ def make_final_figures(results: pd.DataFrame, predictions: pd.DataFrame, out_dir
             title="Feature representation",
             loc="lower center",
             bbox_to_anchor=(0.5, 1.02),
-            ncol=2,
+            ncol=3,
             fontsize=8,
             title_fontsize=8,
             frameon=True,
