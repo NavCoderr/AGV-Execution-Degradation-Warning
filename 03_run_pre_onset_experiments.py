@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 import importlib.util
@@ -78,9 +76,13 @@ def main() -> None:
     }
 
     full_graph_features = exp.BASE + exp.GRAPH + exp.EUCLID
+    euclidean_features = exp.BASE + exp.EUCLID
     feature_sets = {
         "no_graph": exp.BASE,
-        "euclidean_only": exp.BASE + exp.EUCLID,
+        "euclidean_only": euclidean_features,
+        "euclidean_no_soc": [
+            c for c in euclidean_features if c not in exp.SOC_FEATURES
+        ],
         "full_graph": full_graph_features,
         "full_graph_no_soc": [
             c for c in full_graph_features if c not in exp.SOC_FEATURES
