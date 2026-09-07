@@ -1,20 +1,14 @@
 # Mission-Aware Short-Horizon Forecasting of AGV Execution Degradation
 
-This repository contains the data-processing, modelling, evaluation, and audit scripts for short-horizon forecasting of execution-degradation onsets in graph-based automated guided vehicle (AGV) missions.
+This repository contains the data-processing, modelling, evaluation, and robustness scripts associated with short-horizon forecasting of execution-degradation onsets in graph-based automated guided vehicle (AGV) missions.
 
-The monitored condition occurs when an AGV retains an active mission but is about to lose effective physical progress. The formulation distinguishes this condition from commanded waiting, safety holds, operator intervention, mission completion, unavailable telemetry, and already-degraded execution.
+The study addresses a post-dispatch monitoring problem: given an active AGV mission, current physical observations, and available route context, can an upcoming loss of effective physical progress be forecast before the confirmed onset?
 
-The repository evaluates whether directed-route context provides predictive information beyond a common telemetry-and-provenance representation and Euclidean target proximity when an entire physical recording session is held out.
+The main research question is whether **directed-route context provides predictive information beyond physical telemetry, observation provenance, and Euclidean target proximity when an entire physical recording session is unseen**.
 
-The output is intended as a supervisory warning signal for possible TMS/MES decision support. It is not a mechanical-fault detector, certified safety controller, or autonomous recovery policy.
+The proposed output is a supervisory warning signal intended for possible TMS/MES decision support. It is not a mechanical-fault detector, certified safety controller, or autonomous recovery policy.
 
-## Research question
-
-The primary question is:
-
-> Does directed-route context improve short-horizon forecasting of execution-degradation onsets beyond telemetry, observation provenance, and Euclidean target proximity when the model is evaluated on a completely unseen physical recording session?
-
-The contribution is the post-dispatch monitoring formulation, controlled route-context comparison, and complete-session evaluation protocol rather than a new classifier architecture.
+---
 
 ## Dataset
 
@@ -22,33 +16,42 @@ The evaluation uses five physical recording sessions collected from the same AGV
 
 The navigation graph contains:
 
-* 35 nodes;
-* 102 directed edges.
+- 35 nodes
+- 102 directed edges
 
-The five sessions contain 18,534 aligned one-second rows and 67 operational onsets under the fixed motion-and-mission definition.
+After past-only one-second harmonisation, the dataset contains:
 
-| Session             | Aligned rows |   Observed | Short-held | Unavailable | Eligible 5-s rows | Onsets |
-| ------------------- | -----------: | ---------: | ---------: | ----------: | ----------------: | -----: |
-| S1 low-SOC stress   |        8,027 |      4,240 |      3,444 |         343 |             2,148 |     25 |
-| S2 high-SOC control |        1,679 |        790 |        801 |          88 |               387 |      0 |
-| S3 medium-SOC       |        2,288 |      2,288 |          0 |           0 |             1,159 |     10 |
-| S4 safety-rich      |        4,249 |      4,249 |          0 |           0 |             2,786 |     32 |
-| S5 runtime-TMS      |        2,291 |      1,190 |        966 |         135 |               724 |      0 |
-| **Total**           |   **18,534** | **12,757** |  **5,211** |     **566** |         **7,204** | **67** |
+- **18,534 aligned rows**
+- **67 operational onsets**
+- **7,204 eligible 5-s forecasting rows**
+- **6,151 eligible 10-s forecasting rows**
+- **4,644 eligible 20-s forecasting rows**
+
+| Session | Aligned rows | Eligible 5-s rows | Onsets |
+| --- | ---: | ---: | ---: |
+| S1 low-SOC stress | 8,027 | 2,148 | 25 |
+| S2 high-SOC control | 1,679 | 387 | 0 |
+| S3 medium-SOC | 2,288 | 1,159 | 10 |
+| S4 safety-rich | 4,249 | 2,786 | 32 |
+| S5 runtime-TMS | 2,291 | 724 | 0 |
+| **Total** | **18,534** | **7,204** | **67** |
 
 S1, S3, and S4 contain operational onsets. S2 and S5 contain no operational onset under the fixed rule and are retained as negative-control sessions.
 
-Recorded routes cover 57.05% of the aligned rows, while 39.54% use a directed minimum-distance reconstruction. The remaining 3.41% do not have applicable graph context.
+Recorded routes cover 57.05% of aligned rows, while 39.54% use a minimum-distance directed reconstruction. The remaining 3.41% do not have applicable graph context.
 
-For the operational onset events, S1 uses recorded route context. Recorded controller routes are unavailable for the operational onset events in S3 and S4; their directed-route context is therefore based on minimum-distance directed reconstruction.
+For the operational onset events:
 
-Route provenance is retained explicitly so that recorded and reconstructed route context remain distinguishishable.
+- S1 uses recorded route context
+- S3 and S4 use reconstructed directed-route context because controller-recorded routes are unavailable for those events
 
-Aligned one-second rows are used to construct temporal histories. They are not treated as independent experimental repetitions. The primary unit of generalisation is a complete physical recording session.
+Route-source provenance is retained explicitly.
+
+---
 
 ## Input files
 
-Place the input files inside the `data/` directory:
+Place the source files in `data/`:
 
 ```text
 data/
@@ -61,295 +64,414 @@ data/
 └── Edge_Distances3.csv
 ```
 
-## Past-only one-second harmonisation
+---
 
-Each physical recording session is mapped onto an integer-second analysis grid.
+## Past-only harmonisation
 
-The harmonisation procedure:
+Each recording session is mapped to an integer-second analysis grid.
 
-1. validates timestamps and removes exact duplicate records;
-2. aggregates observations falling within the same second;
-3. propagates the latest past observation for at most two seconds;
-4. marks longer communication gaps as unavailable;
-5. records whether each row is observed, short-held, or unavailable;
-6. prevents future samples from being used for interpolation;
-7. separates discontinuous telemetry segments.
+The preprocessing pipeline:
 
-Unavailable telemetry is not interpreted as physical standstill. Short-held rows do not count as genuine physical observations when constructing the degradation rule.
+1. validates timestamps and removes exact duplicate records
+2. aggregates observations within the same second
+3. propagates the latest past observation for at most 2 s
+4. marks longer gaps as unavailable
+5. records observation provenance
+6. does not use future samples for interpolation
+7. separates discontinuous telemetry segments
 
-The exact 1-Hz representation refers to the harmonised analysis grid and does not imply that every original telemetry source was natively sampled at exactly 1 Hz.
+Unavailable telemetry is not interpreted as physical standstill.
+
+The one-second representation refers to the harmonised analysis grid and does not imply that every original telemetry source was natively sampled at exactly 1 Hz.
+
+---
 
 ## Operational onset definition
 
-The operational state rule uses a 10-second past-only history.
+The operational state rule uses a 10-s past-only history.
 
 A candidate degraded state requires:
 
-* an active mission during at least 60% of the history;
-* an external explanation during no more than 20% of the history;
-* either:
+- an active mission during at least 60% of the history
+- no dominant external explanation
+- stop share at least 0.60 using a speed threshold of 0.03 m/s, or mean speed below 0.055 m/s
+- Cartesian displacement below 0.03 m
+- at least four genuine physical observations
+- at least 6 s of genuine observation span
 
-  * stop share of at least 0.60 using a speed threshold of 0.03 m/s; or
-  * mean speed below 0.055 m/s;
-* Cartesian displacement below 0.03 m;
-* at least four genuine physical observations;
-* at least six seconds of genuine observation span.
+The candidate state must persist for 3 s before an onset is registered.
 
-The candidate state must persist for three seconds before an onset is registered. A new onset can be registered only after ten seconds of recovery.
+A new onset can be registered only after 10 s of recovery.
 
-For forecasting horizon `h`, a positive target indicates that the first confirmed operational onset occurs within `(t, t+h]` while the AGV is currently not in a confirmed degraded state and the mission remains at risk.
+Onset therefore denotes the **confirmation time of a sustained degradation episode**. The final pre-onset samples may contain unconfirmed degradation cues, but no confirmed degradation episode is active at the forecasting anchor.
 
-Forecast anchors are censored at:
+For forecasting horizon `h`, the target is positive when the first confirmed onset occurs within:
 
-* mission completion;
-* an external hold;
-* unavailable telemetry;
-* the end of the mission leg;
-* insufficient future follow-up.
+```text
+(t, t + h]
+```
+
+for:
+
+```text
+h ∈ {5, 10, 20} s
+```
+
+Forecast anchors are censored at mission completion, external holds, unavailable telemetry, mission-leg boundaries, and insufficient future follow-up.
 
 Graph progress is not used in the target definition.
 
-The target is an operational definition of ineffective mission execution. It is not an independently annotated mechanical-fault label.
-
-## Route representation
-
-If a valid controller-recorded route is available, it is retained.
-
-When the route is unavailable, the pipeline reconstructs a minimum-distance directed path from the associated AGV position to the logged target node.
-
-Route provenance is retained so that recorded and reconstructed route context are distinguishable. Reconstructed route variables are treated as approximate mission context rather than controller-recorded ground truth.
-
-Graph-derived variables include:
-
-* graph-route remaining distance;
-* route completion;
-* recent graph progress;
-* graph progress rate;
-* current-edge progress and remaining distance;
-* graph-association variables;
-* node and edge context;
-* route availability and provenance.
-
-Euclidean variables include straight-line target distance and recent Euclidean progress.
+---
 
 ## Feature representations
 
-Four controlled representations are evaluated:
+Five controlled feature representations are evaluated.
 
-1. **Base context**
+### 1. Base context
 
-   * physical telemetry;
-   * recent speed and stopping behaviour;
-   * electrical and wheel measurements;
-   * command-consistency measurements;
-   * observation age and availability;
-   * missingness indicators;
-   * route-source provenance.
+Includes:
 
-2. **Base + Euclidean**
+- physical telemetry
+- speed and stopping history
+- electrical and wheel measurements
+- command-consistency variables
+- position confidence
+- observation age
+- telemetry availability
+- missingness indicators
+- route-source provenance
 
-   * base context;
-   * Euclidean target distance;
-   * recent Euclidean progress.
+### 2. Base + Euclidean
 
-3. **Base + Euclidean + graph**
+Adds:
 
-   * base and Euclidean context;
-   * directed-route distance and completion;
-   * recent graph progress;
-   * current-edge and node context;
-   * graph-association variables.
+- straight-line target distance
+- recent Euclidean progress
 
-4. **Base + Euclidean + graph, no SOC**
+### 3. Base + Euclidean, no SOC
 
-   * the full representation;
-   * all SOC-derived variables removed.
+Uses the Euclidean representation after removing all SOC-derived variables.
 
-Active-mission and external-hold variables are used for eligibility and censoring. They are not predictive model inputs.
+### 4. Base + Euclidean + graph
+
+Adds:
+
+- directed-route remaining distance
+- route completion
+- recent graph progress
+- current-edge context
+- node context
+- graph-association variables
+
+### 5. Base + Euclidean + graph, no SOC
+
+Uses the graph representation after removing all SOC-derived variables.
+
+Active-mission and external-hold variables are used for eligibility and censoring and are not predictive model inputs.
+
+---
 
 ## Models
 
 The tabular evaluation includes:
 
-* Logistic Regression;
-* ExtraTrees with 400 trees;
-* Random Forest with 350 trees;
-* Histogram Gradient Boosting with 250 iterations.
+- Logistic Regression
+- ExtraTrees, 400 trees
+- Random Forest, 350 trees
+- Histogram Gradient Boosting, 250 iterations
 
-All learned models use random seed 42. Class-balanced learning is used where supported.
+All learned models use random seed 42.
 
-A separate temporal baseline evaluates a single-layer GRU using:
+A separate temporal baseline uses a single-layer GRU with:
 
-* a fixed 10-second sequence;
-* 32 hidden units;
-* dropout of 0.15;
-* class-weighted binary cross-entropy;
-* AdamW;
-* learning rate of `1e-3`;
-* weight decay of `1e-4`;
-* batch size of 128;
-* 40 training epochs;
-* random seed 42.
+- 10-s input sequence
+- 32 hidden units
+- dropout 0.15
+- class-weighted binary cross-entropy
+- AdamW
+- learning rate `1e-3`
+- weight decay `1e-4`
+- batch size 128
+- 40 epochs
+- random seed 42
 
 The GRU is included as a temporal baseline and is not presented as a novel neural architecture.
 
+---
+
 ## Evaluation protocol
 
-The primary protocol is complete-session leave-one-session-out (LOSO) evaluation.
+The primary protocol is **complete-session leave-one-session-out (LOSO)** evaluation.
 
-For each fold:
+For every fold:
 
-1. one complete physical recording session is reserved for testing;
-2. the other four sessions form the development data;
-3. imputation, scaling, feature removal, and model fitting use development data only;
-4. probability calibration excludes the test session;
-5. the decision threshold is selected without using the test session.
-
-When possible, a complete development session containing sufficient examples of both classes is reserved for Platt calibration. Otherwise, a class-valid chronological development tail is used.
-
-The probability threshold is selected from 0.10 to 0.90 in increments of 0.02 using calibration-set macro-F1.
+1. one complete physical recording session is reserved for testing
+2. all remaining sessions form the development data
+3. imputation, scaling, feature removal, and model fitting use development data only
+4. probability calibration excludes the held-out session
+5. the probability threshold is selected without using the held-out session
 
 PR-AUC is the primary ranking metric because positive forecasting anchors are rare.
 
-S2 and S5 do not contain operational onsets. PR-AUC is therefore undefined in those held-out folds and is averaged over the three positive-event sessions. Threshold-dependent metrics and Brier score are evaluated across all five sessions where applicable.
+S2 and S5 contain no positive events, so PR-AUC is undefined for these two held-out folds.
 
-### Primary analysis and exploratory comparisons
+PR-AUC summaries are therefore averaged across the three positive-event held-out sessions.
 
-The five-second Random Forest representation comparison is the primary reported representation analysis.
+---
 
-For completeness, the repository also reports the configuration with the highest observed mean PR-AUC at each forecasting horizon. Because these configurations are identified from the held-out LOSO results, the best-at-each-horizon comparison is treated as exploratory and descriptive rather than as an independently confirmed model-selection result.
+## Primary 5-s result
 
-## Primary five-second representation results
+The primary reported analysis keeps the model fixed as Random Forest and compares matched feature representations.
 
-For Random Forest at the primary five-second forecasting horizon:
+| Representation | Mean PR-AUC |
+| --- | ---: |
+| Base context | 0.488 ± 0.190 |
+| Base + Euclidean | 0.587 ± 0.174 |
+| **Base + Euclidean, no SOC** | **0.570 ± 0.214** |
+| Base + Euclidean + graph | 0.584 ± 0.259 |
+| **Base + Euclidean + graph, no SOC** | **0.598 ± 0.267** |
 
-| Representation                   |   Mean PR-AUC |
-| -------------------------------- | ------------: |
-| Base context                     | 0.488 ± 0.190 |
-| Base + Euclidean                 | 0.587 ± 0.174 |
-| Base + Euclidean + graph         | 0.584 ± 0.259 |
-| Base + Euclidean + graph, no SOC | 0.598 ± 0.267 |
+The primary matched no-SOC comparison is therefore:
 
-PR-AUC is averaged across the three positive-event held-out sessions.
+```text
+Euclidean, no SOC:
+0.570 ± 0.214
 
-The Euclidean-plus-graph representation without SOC obtains mean PR-AUC 0.598, compared with 0.587 for the Euclidean representation and 0.488 for the common base context.
+Euclidean + graph, no SOC:
+0.598 ± 0.267
 
-The improvement over Euclidean context is modest and varies across held-out sessions and models. The results do not support universal graph superiority.
+Difference:
++0.028
+```
 
-## Exploratory across-horizon results
+At the development-selected operating points, the same matched comparison changes:
 
-For descriptive comparison, the configuration with the highest observed mean PR-AUC at each forecasting horizon is:
+- macro-F1: 0.604 → 0.674
+- positive-class F1: 0.221 → 0.356
+- recall: 0.190 → 0.325
+- Brier score: 0.0162 → 0.0157
 
-| Horizon | Model and representation                  |        PR-AUC |      Macro-F1 |   Positive F1 |         Brier |
-| ------: | ----------------------------------------- | ------------: | ------------: | ------------: | ------------: |
-|     5 s | Random Forest / Euclidean + graph, no SOC | 0.598 ± 0.267 | 0.674 ± 0.172 | 0.356 ± 0.352 | 0.016 ± 0.015 |
-|    10 s | Random Forest / Euclidean + graph, no SOC | 0.675 ± 0.145 | 0.563 ± 0.102 | 0.152 ± 0.212 | 0.038 ± 0.042 |
-|    20 s | Histogram Gradient Boosting / Euclidean   | 0.597 ± 0.062 | 0.576 ± 0.102 | 0.211 ± 0.249 | 0.083 ± 0.081 |
+The improvement is interpreted as complementary route-context information rather than universal graph superiority.
 
-PR-AUC is averaged across the three positive-event test sessions. The remaining metrics use all five held-out sessions.
+---
 
-These are exploratory highest-observed LOSO configurations and are not treated as independently selected confirmatory test configurations.
+## Matched comparison across horizons
 
-## Alert policy
+To examine whether the representation effect persists with forecast horizon, both the Random Forest model and no-SOC condition are kept fixed.
 
-A supervisory alert activates when at least two of the latest three calibrated probabilities exceed the development-selected threshold.
+| Horizon | Euclidean, no SOC | Euclidean + graph, no SOC | Difference |
+| ---: | ---: | ---: | ---: |
+| 5 s | 0.570 ± 0.214 | 0.598 ± 0.267 | +0.028 |
+| 10 s | 0.636 ± 0.114 | 0.675 ± 0.145 | +0.039 |
+| 20 s | 0.527 ± 0.172 | 0.494 ± 0.247 | -0.034 |
 
-The policy also uses:
+At 10 s, fold-level PR-AUC changes from:
 
-* a lower deactivation threshold;
-* hysteresis;
-* a five-second cooldown;
-* state reset at session, telemetry-segment, mission-leg, or timestamp discontinuities.
+```text
+S1: 0.709 → 0.735
+S3: 0.504 → 0.509
+S4: 0.694 → 0.780
+```
 
-An onset is counted as warned when the alert is active during its corresponding pre-onset horizon.
+Thus, the graph representation improves PR-AUC in all three positive-event held-out sessions at 10 s.
 
-False-alert frequency is normalised by eligible monitored exposure rather than complete wall-clock recording duration.
+The graph advantage does not persist at 20 s.
 
-## Alert replay results
+---
 
-At the five-second operating point, the Random Forest using Euclidean-plus-graph context without SOC:
+## Target-feature sensitivity
 
-* warns 45 of 67 operational onsets;
-* achieves event-level recall of 0.672;
-* produces 59 alert episodes;
-* produces 15 false alert episodes;
-* produces 7.50 false alert episodes per eligible forecasting hour;
-* warns 34 events with at least two seconds of lead;
-* warns 10 events with at least five seconds of lead;
-* produces no alert episodes in S2 or S5.
+Run:
 
-The operating threshold is selected using development data only.
+```bash
+python 08_run_target_feature_sensitivity.py
+```
 
-Session-level warned events are:
+This experiment repeats the matched no-SOC Random Forest comparison after removing the direct speed and stop-history predictors:
+
+```text
+speed_mps
+speed_mean_5s
+speed_mean_10s
+speed_mean_30s
+speed_std_10s
+stop_share_5s
+stop_share_10s
+stop_share_30s
+```
+
+Results:
+
+| Horizon | Euclidean, no SOC | Euclidean + graph, no SOC |
+| ---: | ---: | ---: |
+| 5 s | 0.538 ± 0.161 | 0.593 ± 0.291 |
+| 10 s | 0.634 ± 0.128 | 0.661 ± 0.173 |
+
+This provides additional evidence that the observed short-horizon route-context ranking advantage is not explained solely by the direct speed and stop-history predictors.
+
+Outputs:
+
+```text
+outputs/target_feature_sensitivity/
+├── 01_loso_results.csv
+├── 02_summary.csv
+└── 03_motion_history_sensitivity.png
+```
+
+---
+
+## Candidate-free-anchor sensitivity
+
+Run Step 3 first, then:
+
+```bash
+python 09_run_pre_candidate_sensitivity.py
+```
+
+This post-hoc robustness analysis uses already-generated held-out Random Forest predictions and restricts evaluation to anchors where the candidate-degradation rule is not active.
+
+Results:
+
+| Horizon | Euclidean, no SOC | Euclidean + graph, no SOC |
+| ---: | ---: | ---: |
+| 5 s | 0.548 | 0.595 |
+| 10 s | 0.747 | 0.798 |
+| 20 s | 0.492 | 0.457 |
+
+Within this stricter subset, the graph representation retains higher mean PR-AUC at 5 and 10 s.
+
+The advantage does not persist at 20 s.
+
+This is a post-hoc robustness analysis and is not treated as a separate confirmatory task.
+
+Outputs:
+
+```text
+outputs/pre_candidate_sensitivity/
+├── 01_fold_results.csv
+├── 02_summary.csv
+└── 03_pre_candidate_sensitivity.png
+```
+
+---
+
+## Exploratory highest-observed configurations
+
+For completeness, the highest observed mean PR-AUC among all evaluated model-representation combinations is:
+
+| Horizon | Model / representation | Mean PR-AUC |
+| ---: | --- | ---: |
+| 5 s | Random Forest / Euclidean + graph, no SOC | 0.598 ± 0.267 |
+| 10 s | Histogram Gradient Boosting / Euclidean, no SOC | 0.686 ± 0.183 |
+| 20 s | Histogram Gradient Boosting / Euclidean | 0.597 ± 0.062 |
+
+These configurations were identified from the held-out LOSO results and are therefore reported only as exploratory observations.
+
+They are not used as independently selected confirmatory test configurations.
+
+---
+
+## Alert replay
+
+At the primary 5-s operating point, the Random Forest using Euclidean-plus-graph context without SOC:
+
+- warns 45 of 67 operational onsets
+- achieves event-level recall of 0.672
+- produces 59 alert episodes
+- produces 15 false alert episodes
+- produces 7.50 false alert episodes per eligible forecasting hour
+- warns 34 events with at least 2 s lead
+- warns 10 events with at least 5 s lead
+- produces no alert episodes in S2 or S5
+
+Session-level warned events:
 
 | Session | Warned / total |
-| ------- | -------------: |
-| S1      |        20 / 25 |
-| S3      |         2 / 10 |
-| S4      |        23 / 32 |
+| --- | ---: |
+| S1 | 20 / 25 |
+| S3 | 2 / 10 |
+| S4 | 23 / 32 |
 
-Performance is session-dependent, particularly in S3. The alert is therefore intended for supervisory or shadow-mode evaluation rather than autonomous control.
+The alert is intended for supervisory evaluation rather than autonomous control.
+
+### Operating-point sensitivity
+
+The alert policy is also replayed after scaling each development-selected threshold without selecting a new threshold from the held-out session.
+
+| Operating point | Warned | False-alert frequency |
+| --- | ---: | ---: |
+| Conservative, 1.2x | 39 / 67 | 3.50 episodes/h |
+| Learned, 1.0x | 45 / 67 | 7.50 episodes/h |
+| Sensitive, 0.8x | 46 / 67 | 9.49 episodes/h |
+
+These values illustrate the supervisory recall-alert-burden trade-off.
+
+---
 
 ## Temporal GRU baseline
 
 The fixed-sequence GRU obtains:
 
-| Horizon |   Mean PR-AUC |
-| ------: | ------------: |
-|     5 s | 0.404 ± 0.187 |
-|    10 s | 0.530 ± 0.254 |
-|    20 s | 0.352 ± 0.212 |
+| Horizon | Mean PR-AUC |
+| ---: | ---: |
+| 5 s | 0.404 ± 0.187 |
+| 10 s | 0.530 ± 0.254 |
+| 20 s | 0.352 ± 0.212 |
 
-At the primary five-second horizon, the GRU:
+At the primary 5-s horizon, the GRU:
 
-* warns 34 of 67 operational onsets;
-* produces 27 false alert episodes;
-* produces 13.49 false alerts per eligible forecasting hour.
+- warns 34 of 67 operational onsets
+- produces 27 false alert episodes
+- produces 13.49 false alerts per eligible forecasting hour
 
-At the primary five-second operating point, the GRU provides a less favourable ranking and alert trade-off than the reported Random Forest configuration.
+Under the available five-session dataset, the pre-specified GRU provides a less favourable primary-horizon ranking and alert trade-off than the reported Random Forest graph representation.
 
-## Communication-gap stress test
+This does not imply that recurrent or other temporal models are generally inferior.
 
-An ExtraTrees Euclidean-plus-graph model is evaluated after injecting communication gaps of 1, 2, 3, 5, and 10 seconds.
+---
 
-The aggregate values below use the `complete_test_session` rows in `outputs/scientific_experiments/05_gap_robustness.csv`, which is generated by `02_run_scientific_experiments.py`.
+## Communication-gap robustness
 
-Prediction coverage is averaged across all five held-out sessions. PR-AUC is averaged across the three held-out sessions containing operational onsets.
+`02_run_scientific_experiments.py` also evaluates an ExtraTrees Euclidean-plus-graph model after injecting communication gaps of:
 
-| Injected gap | Mean prediction coverage | Mean PR-AUC |
-| -----------: | -----------------------: | ----------: |
-|          1 s |                    1.000 |       0.519 |
-|          2 s |                    1.000 |       0.515 |
-|          3 s |                    0.997 |       0.512 |
-|          5 s |                    0.990 |       0.519 |
-|         10 s |                    0.974 |       0.467 |
+```text
+1, 2, 3, 5, and 10 s
+```
 
-Longer gaps reduce prediction coverage after the two-second hold allowance. Ranking performance is comparatively stable through five-second perturbations in this experiment and decreases more clearly at ten seconds.
+Prediction coverage decreases as gaps become longer after the two-second hold allowance.
 
-The stress test does not reproduce every possible communication delay, packet loss, reordering, or network failure.
+The complete numerical results are stored in:
+
+```text
+outputs/scientific_experiments/05_gap_robustness.csv
+```
+
+This stress test does not reproduce every possible delay, packet-loss, reordering, or network-failure condition.
+
+---
 
 ## Latency
 
-Across the evaluated estimators and folds, the largest measured per-row p99 pipeline prediction time in `outputs/scientific_experiments/06_latency.csv` is approximately:
+The largest measured per-row p99 pipeline prediction time across the evaluated models and folds is approximately:
 
 ```text
 0.535 ms
 ```
 
-The maximum committed value is approximately `0.5347568 ms/row`.
-
-This measurement includes fitted in-pipeline preprocessing, transformation, and probability prediction.
+This includes fitted in-pipeline preprocessing, transformation, and probability prediction.
 
 It does not include:
 
-* telemetry acquisition;
-* graph-state construction;
-* communication delay;
-* alert delivery;
-* TMS/MES processing;
-* control execution.
+- telemetry acquisition
+- graph-state construction
+- communication
+- alert delivery
+- TMS/MES processing
+- control execution
 
-It is therefore not an end-to-end deployment latency guarantee.
+It is therefore not an end-to-end latency guarantee.
+
+---
 
 ## Repository structure
 
@@ -364,6 +486,8 @@ It is therefore not an end-to-end deployment latency guarantee.
 ├── 05_run_temporal_gru_baseline.py
 ├── 06_prepare_expert_audit.py
 ├── 07_warning_figure.py
+├── 08_run_target_feature_sensitivity.py
+├── 09_run_pre_candidate_sensitivity.py
 │
 ├── data/
 │   ├── S1_LOW_SOC_STRESS.csv
@@ -378,62 +502,30 @@ It is therefore not an end-to-end deployment latency guarantee.
 │   └── final_successful_h5_warning.png
 │
 └── outputs/
-    ├── harmonized_graph_mission_state.csv
-    ├── event_onsets.csv
-    ├── event_distribution.csv
-    ├── feature_availability.csv
-    ├── session_audit.csv
-    ├── label_definition.json
-    ├── run_summary.json
-    │
     ├── scientific_experiments/
-    │   ├── 00_summary.json                    [generated by Step 2]
-    │   ├── 01_exact_1hz_verification.csv     [generated by Step 2]
-    │   ├── 02_multi_horizon_loso_ablation.csv
-    │   ├── 03_predictions.csv                 [generated by Step 2]
-    │   ├── 04_alert_policy_metrics.csv
-    │   ├── 05_gap_robustness.csv              [generated by Step 2]
-    │   ├── 06_latency.csv
-    │   ├── 07_aggregate_results.csv
-    │   ├── 08_representation_deltas.csv       [generated by Step 2]
-    │   ├── 09_event_distribution.csv
-    │   └── 10_experiment_manifest.json        [generated by Step 2]
-    │
     ├── pre_onset_experiments/
-    │   ├── 07_pre_onset_loso_results.csv
-    │   ├── 08_pre_onset_summary.csv
-    │   ├── 09_pre_onset_predictions.csv       [generated by Step 3]
-    │   └── 10_pre_onset_best_models.csv       [generated by Step 3]
-    │
+    ├── target_feature_sensitivity/
+    ├── pre_candidate_sensitivity/
     ├── provenance_hazard/
-    │   ├── 00_manifest.json
-    │   ├── 01_hazard_loso_results.csv
-    │   ├── 02_hazard_predictions.csv
-    │   ├── 03_hazard_coefficients.csv
-    │   └── 04_hazard_aggregate.csv
-    │
     ├── temporal_gru/
-    │   ├── 00_manifest.json
-    │   ├── 01_temporal_gru_loso_results.csv
-    │   ├── 02_temporal_gru_summary.csv
-    │   ├── 03_temporal_gru_predictions.csv
-    │   ├── 04_temporal_alert_tradeoffs.csv
-    │   └── 05_temporal_vs_best_tabular.csv
-    │
     └── acceptance_audits/
-        ├── 00_manifest.json
-        ├── 01_alert_tradeoff_per_fold.csv
-        ├── 02_alert_tradeoff_aggregate.csv
-        ├── 03_expert_audit_key.csv
-        ├── 04_expert_audit_form.csv
-        └── 05_expert_audit_windows.csv
 ```
 
-Some generated output files are not committed in the repository snapshot. They are recreated automatically when the corresponding experiment script is executed. Files marked as `[generated by Step 2]` are produced by `02_run_scientific_experiments.py`, while files marked as `[generated by Step 3]` are produced by `03_run_pre_onset_experiments.py`. These files are generated results and are not required as input data.
+---
 
-The provenance-conditioned hazard experiment is retained as an exploratory ablation and is not part of the primary claimed method.
+## Generated and large output files
 
-The expert-audit script prepares review cases and forms. Running it does not itself constitute independent expert validation.
+Some experiment outputs, especially prediction-level CSV files, can be large.
+
+GitHub's browser-based uploader does not accept files larger than its web-upload limit. Therefore, some large generated files may not be committed in the repository snapshot.
+
+This does **not** affect the required input data or experiment definitions.
+
+Missing generated outputs can be recreated by running the corresponding experiment script.
+
+The committed summary, aggregate, and figure outputs provide compact records of the reported results.
+
+---
 
 ## Requirements
 
@@ -445,9 +537,13 @@ Install dependencies with:
 python -m pip install -r requirements.txt
 ```
 
+PyTorch is additionally required for the GRU baseline.
+
+---
+
 ## Run order
 
-### 1. Build the harmonised dataset
+### Step 1 — Build the harmonised dataset
 
 ```bash
 python 01_build_scientific_dataset.py
@@ -459,21 +555,21 @@ Primary output:
 outputs/harmonized_graph_mission_state.csv
 ```
 
-### 2. Run the shared tabular experiments
+### Step 2 — Run shared tabular experiments
 
 ```bash
 python 02_run_scientific_experiments.py
 ```
 
-This script generates the shared tabular LOSO outputs, prediction-level results, communication-gap stress test, latency benchmark, verification tables, and representation-comparison outputs. Generated files are written to `outputs/scientific_experiments/`.
+This generates the LOSO tabular results, representation comparisons, communication-gap analysis, alert-policy results, and latency measurements.
 
-### 3. Run the strict pre-onset evaluation
+### Step 3 — Run strict pre-onset experiments
 
 ```bash
 python 03_run_pre_onset_experiments.py
 ```
 
-Important outputs:
+Important outputs include:
 
 ```text
 outputs/pre_onset_experiments/07_pre_onset_loso_results.csv
@@ -482,50 +578,44 @@ outputs/pre_onset_experiments/09_pre_onset_predictions.csv
 outputs/pre_onset_experiments/10_pre_onset_best_models.csv
 ```
 
-The prediction-level and highest-observed summary files are generated when this script is executed and do not need to be present before running the experiment.
-
-The highest-observed configuration table is retained for exploratory across-horizon comparison.
-
-### 4. Run the provenance-conditioned hazard ablation
+### Step 4 — Run exploratory provenance-hazard analysis
 
 ```bash
 python 04_run_provenance_hazard.py
 ```
 
-This is an exploratory ablation.
+This is exploratory and is not part of the primary claimed method.
 
-### 5. Run the temporal GRU baseline
+### Step 5 — Run temporal GRU baseline
 
 ```bash
 python 05_run_temporal_gru_baseline.py
 ```
 
-PyTorch is required for this step.
-
-### 6. Prepare expert-audit materials
+### Step 6 — Prepare expert-audit material
 
 ```bash
 python 06_prepare_expert_audit.py
 ```
 
-This script prepares blinded cases and review forms. It does not itself provide an expert-validation result.
+This prepares blinded review cases and forms. Running the script does not itself constitute independent expert validation.
 
-### 7. Generate the held-out warning figure
+### Step 7 — Generate held-out warning figure
 
 ```bash
 python 07_warning_figure.py
 ```
 
-Input:
+### Step 8 — Run target-feature sensitivity
 
-```text
-outputs/pre_onset_experiments/09_pre_onset_predictions.csv
+```bash
+python 08_run_target_feature_sensitivity.py
 ```
 
-This input file is generated by Step 3. Run `03_run_pre_onset_experiments.py` before generating the warning figure.
+### Step 9 — Run candidate-free-anchor sensitivity
 
-Output:
-
-```text
-figures/final_successful_h5_warning.png
+```bash
+python 09_run_pre_candidate_sensitivity.py
 ```
+
+Step 3 must be completed first because Step 9 uses the held-out prediction file produced by the strict pre-onset experiment.
